@@ -1,27 +1,26 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: hello-world
+  name: hello-world-prod
   namespace: argocd
   annotations:
-    # Authorizes Kargo to manage and sync this Argo CD Application for a Stage
-    kargo.akuity.io/authorized-stage: kargo-hello-world:dev
+    kargo.akuity.io/authorized-stage: kargo-hello-world:prod
 spec:
   project: default
   source:
-    repoURL: https://github.com/example/kargo-testing.git
+    repoURL: https://github.com/mdgilene/kargo-experiment.git
     targetRevision: main
     path: charts/hello-world
     helm:
       valueFiles:
         - values.yaml
+        - ../../stages/prod/values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: hello-world-dev
+    namespace: hello-world-prod
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-
