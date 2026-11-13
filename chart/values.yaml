@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 2
 
 image:
   repository: nginxinc/nginx-unprivileged
@@ -21,3 +21,10 @@ resources:
     cpu: 50m
     memory: 64Mi
 
+
+# Argo Rollouts canary steps (no traffic router, so weights are approximated by pod counts)
+rollout:
+  steps:
+    - setWeight: 50
+    - pause: {duration: 10s}
+    - setWeight: 100
