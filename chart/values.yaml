@@ -1,4 +1,4 @@
-replicaCount: 2
+replicaCount: 1
 
 image:
   repository: nginxinc/nginx-unprivileged
@@ -22,9 +22,7 @@ resources:
     memory: 64Mi
 
 
-# Argo Rollouts canary steps (no traffic router, so weights are approximated by pod counts)
+# Argo Rollouts blue/green: the preview Service targets the new ReplicaSet until it is promoted
 rollout:
-  steps:
-    - setWeight: 50
-    - pause: {duration: 10s}
-    - setWeight: 100
+  autoPromotionEnabled: true
+  scaleDownDelaySeconds: 30
