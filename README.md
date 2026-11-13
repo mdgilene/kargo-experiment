@@ -36,3 +36,7 @@ GITHUB_USER=<user> GITHUB_TOKEN=<pat-with-repo-scope> make bootstrap
 ```
 
 Run `make help` for individual targets (`cluster`, `kargo`, `argocd`, `project`, `apps`, `status`, `teardown`).
+
+## Documentation
+
+- [Release Lifecycle & Data Flow](docs/architecture.md) — Detailed walkthrough of `main` vs. `stage/*` branches, Kargo Freight/Promotions, Argo CD App-of-Apps, Blue/Green Rollouts, and Smoke/E2E verification.
