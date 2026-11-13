@@ -1,0 +1,17 @@
+# Helm
+charts/**/*.tgz
+charts/**/charts/
+
+# Kubernetes / Kustomize / Local state
+*.kubeconfig
+.kube/
+.env
+*.secret.yaml
+*.secret.yml
+
+# OS / Editor
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
