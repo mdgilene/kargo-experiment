@@ -8,3 +8,4 @@ This repository contains configuration and manifests for testing release orchest
 - `argocd/` — Argo CD `Application` / `ApplicationSet` manifests used to deploy stages.
 - `kargo/` — Kargo `Project`, `Warehouse`, and `Stage` manifests defining the promotion pipeline.
 - `stages/` — Rendered or stage-specific GitOps configurations managed by Kargo promotions.
+
