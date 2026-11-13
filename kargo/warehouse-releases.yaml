@@ -1,0 +1,16 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: hello-world-releases
+  namespace: kargo-hello-world
+spec:
+  interval: 30s
+  subscriptions:
+    # Watches promoted full release tags (e.g. v0.4.0) created by the 'release' stage
+    - git:
+        repoURL: https://github.com/mdgilene/kargo-experiment.git
+        commitSelectionStrategy: SemVer
+        semverConstraint: ">=0.1.0"
+        allowTagsRegexes:
+          - ^v\d+\.\d+\.\d+$
+        discoveryLimit: 5

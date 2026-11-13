@@ -1,0 +1,38 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: release
+  namespace: kargo-hello-world
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: hello-world
+      sources:
+        stages:
+          - staging
+  promotionTemplate:
+    spec:
+      vars:
+        - name: repo
+          value: https://github.com/mdgilene/kargo-experiment.git
+        - name: releaseTag
+          value: ${{ split(commitFrom(vars.repo).Tag, '-')[0] }}
+      steps:
+        # Check out the verified RC commit
+        - uses: git-clone
+          config:
+            repoURL: ${{ vars.repo }}
+            checkout:
+              - commit: ${{ commitFrom(vars.repo).ID }}
+                path: ./src
+        # Tag the verified commit with the full SemVer release tag (e.g. v0.4.0-rc.1 -> v0.4.0)
+        - uses: git-tag
+          config:
+            path: ./src
+            tag: ${{ vars.releaseTag }}
+            message: "Release ${{ vars.releaseTag }} (promoted from ${{ commitFrom(vars.repo).Tag }})"
+        # Push the new tag to GitHub so the hello-world-releases Warehouse picks it up for prod
+        - uses: git-push
+          config:
+            path: ./src

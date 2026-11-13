@@ -7,10 +7,9 @@ spec:
   requestedFreight:
     - origin:
         kind: Warehouse
-        name: hello-world
+        name: hello-world-releases
       sources:
-        stages:
-          - staging
+        direct: true
   promotionTemplate:
     spec:
       vars:

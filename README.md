@@ -18,11 +18,12 @@ together with semver git tags (`vX.Y.Z`); a tag is the unit Kargo promotes.
 
 ## How a release flows
 
-1. Tag the repo (`git tag -a vX.Y.Z`, bump `version` in both `Chart.yaml` files) and push.
-2. The Warehouse creates Freight for the tag; `dev` auto-promotes, then `staging`, then `prod`.
+1. Tag the repo with a release candidate (`git tag -a vX.Y.Z-rc.1`, bump `version` in both `Chart.yaml` files) and push.
+2. The `hello-world` Warehouse creates RC Freight; `dev` auto-promotes, then `staging`.
 3. Each stage builds its `stage/<env>` branch from the tagged commit: `charts/`, `values/`, `apps/`.
 4. `root-<env>` (tracking `stage/<env>`) deploys the child apps; Kargo syncs the root, then each child.
 5. `staging` runs the E2E suites (`kargo/analysis-e2e*.yaml`) as Kargo verification.
+6. Once `staging` passes, the `release` stage promotes `vX.Y.Z-rc.N` to `vX.Y.Z`, which `hello-world-releases` picks up to auto-promote `prod`.
 
 ## Ports (kind)
 

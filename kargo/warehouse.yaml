@@ -6,9 +6,12 @@ metadata:
 spec:
   interval: 30s
   subscriptions:
-    # This repository (chart + stage values), versioned with semver git tags (v0.1.0, ...)
+    # Watches release candidate tags (e.g. v0.4.0-rc.1) to feed dev -> staging -> release
     - git:
         repoURL: https://github.com/mdgilene/kargo-experiment.git
         commitSelectionStrategy: SemVer
-        semverConstraint: ">=0.1.0"
+        strictSemvers: false
+        semverConstraint: ">=0.1.0-0"
+        allowTagsRegexes:
+          - ^v\d+\.\d+\.\d+-rc\.\d+$
         discoveryLimit: 5

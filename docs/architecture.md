@@ -25,8 +25,8 @@ This setup separates **source configuration** from **environment state** using G
 
 ```mermaid
 flowchart TD
-    A["1. Developer pushes semver tag (vX.Y.Z) to main"] --> B["2. Kargo Warehouse polls Git tags every 30s"]
-    B --> C["3. Warehouse mints Freight (pinned commit SHA + tag)"]
+    A["1. Developer pushes RC tag (vX.Y.Z-rc.N) to main"] --> B["2. Warehouse 'hello-world' polls RC tags every 30s"]
+    B --> C["3. Mints RC Freight (pinned commit SHA + RC tag)"]
     C -->|autoPromotionEnabled: true| D["4. Stage 'dev' Promotion"]
 
     subgraph Promotion["Stage Promotion Steps (per environment)"]
@@ -44,26 +44,29 @@ flowchart TD
     F -->|Smoke test passes| G["7. Active Service switches to green; old pods scale down after 30s"]
     G -->|autoPromotionEnabled: true| H["8. Stage 'staging' Promotion (same steps)"]
     H --> I["9. Kargo Verification: runs e2e & e2e-api Jobs against staging Services"]
-    I -->|E2E passes| J["10. Stage 'prod' Promotion (same steps + smoke test)"]
+    I -->|E2E passes| J["10. Stage 'release' creates & pushes full tag (vX.Y.Z)"]
+    J --> K["11. Warehouse 'hello-world-releases' discovers full tag -> mints Release Freight"]
+    K -->|autoPromotionEnabled: true| L["12. Stage 'prod' Promotion (same steps + smoke test)"]
 ```
 
 ---
 
 ## 3. Step-by-Step Lifecycle
 
-### Step 1: Release Creation (`main` + SemVer Tag)
-A release is triggered by bumping `version` in `charts/hello-world/Chart.yaml` and `charts/hello-api/Chart.yaml`, committing to `main`, and pushing an annotated SemVer tag (`vX.Y.Z`). Both applications are versioned and promoted together as a single unit.
+### Step 1: Release Candidate Creation (`main` + `-rc.N` Tag)
+A release starts by bumping `version` in `charts/hello-world/Chart.yaml` and `charts/hello-api/Chart.yaml`, committing to `main`, and pushing an annotated Release Candidate tag (`vX.Y.Z-rc.N`). Both applications are versioned and promoted together as a single unit.
 
-### Step 2: Artifact Discovery (`Warehouse` → `Freight`)
+### Step 2: RC Artifact Discovery (`hello-world` Warehouse → `Freight`)
 - `kargo/warehouse.yaml` defines the `hello-world` `Warehouse` with `interval: 30s`.
-- It subscribes to Git tags on `https://github.com/mdgilene/kargo-experiment.git` using `commitSelectionStrategy: SemVer` (`>=0.1.0`).
-- When a new tag appears, Kargo creates a **Freight** resource containing the exact commit SHA and tag name.
+- It subscribes to Git tags matching `^v\d+\.\d+\.\d+-rc\.\d+$` (`strictSemvers: false`, `semverConstraint: ">=0.1.0-0"`).
+- When a new RC tag appears, Kargo creates a **Freight** resource containing the exact commit SHA and RC tag name.
 
 ### Step 3: Stage Promotion (`PromotionTemplate`)
-`kargo/project.yaml` (`ProjectConfig`) sets `autoPromotionEnabled: true` for `dev`, `staging`, and `prod`:
-- `dev` pulls Freight directly from the `hello-world` `Warehouse`.
-- `staging` pulls verified Freight from `dev`.
-- `prod` pulls verified Freight from `staging`.
+`kargo/project.yaml` (`ProjectConfig`) sets `autoPromotionEnabled: true` for `dev`, `staging`, `release`, and `prod`:
+- `dev` pulls RC Freight directly from the `hello-world` `Warehouse`.
+- `staging` pulls verified RC Freight from `dev`.
+- `release` pulls verified RC Freight from `staging`.
+- `prod` pulls full Release Freight directly from the `hello-world-releases` `Warehouse`.
 
 When a `Stage` promotes a Freight, its `promotionTemplate` runs sequentially:
 1. **`git-clone`**: Checks out the Freight's tagged commit into `./src` and the target `stage/<env>` branch into `./out`.
@@ -100,7 +103,12 @@ Once `hello-world-staging` and `hello-api-staging` are `Synced` and `Healthy`, K
   - `e2e` (`kargo/analysis-e2e.yaml`) targeting `hello-world-staging.hello-world-staging.svc.cluster.local:8080`
   - `e2e-api` (`kargo/analysis-e2e-api.yaml`) targeting `hello-api-staging.hello-api-staging.svc.cluster.local:8080`
 - Each template launches a Kubernetes `Job` that verifies HTTP `200` on `/`, expected stage message, chart/image versions, `404` on unknown routes, and stability across repeated requests.
-- Only when **both** verification Jobs succeed does Kargo mark the Freight verified for `staging`, unblocking auto-promotion to `prod`.
+- Only when **both** verification Jobs succeed does Kargo mark the Freight verified for `staging`, unblocking auto-promotion to `release`.
+
+### Step 7: Tag Promotion (`release` Stage → `hello-world-releases` Warehouse → `prod`)
+1. `kargo/stage-release.yaml` checks out the verified RC commit, strips the `-rc.<N>` suffix (`${{ split(commitFrom(vars.repo).Tag, '-')[0] }}`), creates an annotated `vX.Y.Z` tag using `git-tag`, and pushes it with `git-push`.
+2. `kargo/warehouse-releases.yaml` (`hello-world-releases`) polls non-RC SemVer tags (`^v\d+\.\d+\.\d+$`) every `30s` and mints a Release Freight for `vX.Y.Z`.
+3. `prod` auto-promotes that Release Freight and deploys to production.
 
 ---
 
@@ -108,9 +116,11 @@ Once `hello-world-staging` and `hello-api-staging` are `Synced` and `Healthy`, K
 
 | Stage | Input | Output / Mutation | Gate Before Advancing |
 |---|---|---|---|
-| **Developer** | Code / chart / values edits on `main` | Annotated Git tag `vX.Y.Z` | `helm lint` / manual review |
-| **Warehouse** | SemVer Git tags on `main` | `Freight` resource (commit SHA + tag) | Matches `>=0.1.0` |
-| **dev** | `Freight` from `Warehouse` | Pushes `stage/dev` branch; syncs `root-dev` + children | Rollout smoke test on `-preview` Services |
-| **staging** | Verified `Freight` from `dev` | Pushes `stage/staging` branch; syncs `root-staging` + children | Rollout smoke tests + Kargo `e2e` & `e2e-api` verification |
-| **prod** | Verified `Freight` from `staging` | Pushes `stage/prod` branch; syncs `root-prod` + children | Rollout smoke tests |
+| **Developer** | Code / chart / values edits on `main` | Annotated RC tag `vX.Y.Z-rc.N` | `helm lint` / manual review |
+| **RC Warehouse** | `-rc.N` Git tags on `main` | RC `Freight` (commit SHA + RC tag) | Matches `^v\d+\.\d+\.\d+-rc\.\d+$` |
+| **dev** | RC `Freight` from `hello-world` | Pushes `stage/dev` branch; syncs `root-dev` + children | Rollout smoke test on `-preview` Services |
+| **staging** | Verified RC `Freight` from `dev` | Pushes `stage/staging` branch; syncs `root-staging` + children | Rollout smoke tests + Kargo `e2e` & `e2e-api` verification |
+| **release** | Verified RC `Freight` from `staging` | Creates & pushes full `vX.Y.Z` Git tag | `git-tag` + `git-push` succeed |
+| **Release Warehouse** | Full `vX.Y.Z` Git tags on `main` | Release `Freight` (commit SHA + full tag) | Matches `^v\d+\.\d+\.\d+$` |
+| **prod** | Release `Freight` from `hello-world-releases` | Pushes `stage/prod` branch; syncs `root-prod` + children | Rollout smoke tests |
 

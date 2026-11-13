@@ -17,5 +17,8 @@ spec:
         name: staging
       autoPromotionEnabled: true
     - stageSelector:
+        name: release
+      autoPromotionEnabled: true
+    - stageSelector:
         name: prod
       autoPromotionEnabled: true
