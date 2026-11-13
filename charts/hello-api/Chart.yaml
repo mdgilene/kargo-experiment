@@ -1,0 +1,7 @@
+apiVersion: v2
+name: hello-api
+description: A second mock application (hello-api) deployed alongside hello-world
+type: application
+version: 0.3.0
+appVersion: "1.0.0"
+
