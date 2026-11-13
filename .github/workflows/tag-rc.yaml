@@ -1,0 +1,56 @@
+name: Tag Release Candidate
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tag-rc
+  cancel-in-progress: false
+
+jobs:
+  tag-rc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Create and push next RC tag
+        run: |
+          set -euo pipefail
+
+          # Skip if HEAD already has a release or RC tag
+          if git tag --points-at HEAD | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$'; then
+            echo "HEAD is already tagged; skipping."
+            exit 0
+          fi
+
+          # Highest existing full release tag (default v0.0.0 if none)
+          latest_release=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          latest_release=${latest_release:-v0.0.0}
+
+          IFS='.' read -r major minor patch <<< "${latest_release#v}"
+          next_base="${major}.${minor}.$((patch + 1))"
+
+          # Find the highest existing RC number for this next base version
+          latest_rc=$(git tag -l "v${next_base}-rc.*" | grep -E "^v${next_base}-rc\.[0-9]+$" | sort -V | tail -n 1 || true)
+          if [ -z "$latest_rc" ]; then
+            next_rc=1
+          else
+            next_rc=$(( ${latest_rc##*-rc.} + 1 ))
+          fi
+
+          new_tag="v${next_base}-rc.${next_rc}"
+          echo "Tagging HEAD with ${new_tag}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${new_tag}" -m "Release candidate ${new_tag}"
+          git push origin "${new_tag}"
