@@ -1,0 +1,23 @@
+# App of apps: deploys every child Application for the staging environment from the stage/staging branch.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-staging
+  namespace: argocd
+  annotations:
+    kargo.akuity.io/authorized-stage: kargo-hello-world:staging
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mdgilene/kargo-experiment.git
+    targetRevision: stage/staging
+    path: apps
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

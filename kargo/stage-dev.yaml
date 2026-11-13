@@ -29,14 +29,19 @@ spec:
         - uses: git-clear
           config:
             path: ./out
+        # All charts, this stage's values, and this stage's child Application manifests
         - uses: copy
           config:
-            inPath: ./src/charts/hello-world
-            outPath: ./out/chart
+            inPath: ./src/charts
+            outPath: ./out/charts
         - uses: copy
           config:
-            inPath: ./src/stages/dev/values.yaml
-            outPath: ./out/values-stage.yaml
+            inPath: ./src/stages/dev
+            outPath: ./out/values
+        - uses: copy
+          config:
+            inPath: ./src/apps/dev
+            outPath: ./out/apps
         - uses: git-commit
           as: commit
           config:
@@ -45,10 +50,25 @@ spec:
         - uses: git-push
           config:
             path: ./out
+        # Sync the root first (it creates/updates the child apps), then wait on each child
+        - uses: argocd-update
+          as: root
+          config:
+            apps:
+              - name: root-dev
+                namespace: argocd
+                sources:
+                  - repoURL: ${{ vars.repo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
         - uses: argocd-update
           config:
             apps:
               - name: hello-world-dev
+                namespace: argocd
+                sources:
+                  - repoURL: ${{ vars.repo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
+              - name: hello-api-dev
                 namespace: argocd
                 sources:
                   - repoURL: ${{ vars.repo }}

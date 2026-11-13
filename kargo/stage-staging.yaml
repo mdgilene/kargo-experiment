@@ -14,11 +14,16 @@ spec:
   verification:
     analysisTemplates:
       - name: e2e
+      - name: e2e-api
     args:
       - name: host
         value: hello-world-staging.hello-world-staging.svc.cluster.local
       - name: expectedMessage
         value: "Hello World from staging!"
+      - name: apiHost
+        value: hello-api-staging.hello-api-staging.svc.cluster.local
+      - name: apiExpectedMessage
+        value: "Hello API from staging!"
   promotionTemplate:
     spec:
       vars:
@@ -38,14 +43,19 @@ spec:
         - uses: git-clear
           config:
             path: ./out
+        # All charts, this stage's values, and this stage's child Application manifests
         - uses: copy
           config:
-            inPath: ./src/charts/hello-world
-            outPath: ./out/chart
+            inPath: ./src/charts
+            outPath: ./out/charts
         - uses: copy
           config:
-            inPath: ./src/stages/staging/values.yaml
-            outPath: ./out/values-stage.yaml
+            inPath: ./src/stages/staging
+            outPath: ./out/values
+        - uses: copy
+          config:
+            inPath: ./src/apps/staging
+            outPath: ./out/apps
         - uses: git-commit
           as: commit
           config:
@@ -54,10 +64,25 @@ spec:
         - uses: git-push
           config:
             path: ./out
+        # Sync the root first (it creates/updates the child apps), then wait on each child
+        - uses: argocd-update
+          as: root
+          config:
+            apps:
+              - name: root-staging
+                namespace: argocd
+                sources:
+                  - repoURL: ${{ vars.repo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
         - uses: argocd-update
           config:
             apps:
               - name: hello-world-staging
+                namespace: argocd
+                sources:
+                  - repoURL: ${{ vars.repo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
+              - name: hello-api-staging
                 namespace: argocd
                 sources:
                   - repoURL: ${{ vars.repo }}
