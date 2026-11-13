@@ -1,0 +1,23 @@
+replicaCount: 1
+
+image:
+  repository: nginxinc/nginx-unprivileged
+  pullPolicy: IfNotPresent
+  tag: "1.27-alpine"
+
+service:
+  type: NodePort
+  port: 8080
+  # Host-mapped kind ports are 32080-32082
+  nodePort: 32080
+
+message: "Hello World from Kargo + Argo CD!"
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
