@@ -2,6 +2,6 @@ apiVersion: v2
 name: hello-world
 description: A simple Hello World Helm chart for Kargo and Argo CD release orchestration
 type: application
-version: 0.3.3
+version: 0.4.0-rc.3
 appVersion: "1.0.0"
 
