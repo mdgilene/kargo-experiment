@@ -4,7 +4,7 @@ metadata:
   name: hello-world
   namespace: kargo-hello-world
 spec:
-  interval: 5m
+  interval: 30s
   subscriptions:
     # Container image
     - image:
