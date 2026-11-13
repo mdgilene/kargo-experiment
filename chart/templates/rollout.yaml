@@ -21,17 +21,22 @@ data:
       </body>
     </html>
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ include "hello-world.fullname" . }}
   labels:
     {{- include "hello-world.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       {{- include "hello-world.selectorLabels" . | nindent 6 }}
+  strategy:
+    canary:
+      steps:
+        {{- toYaml .Values.rollout.steps | nindent 8 }}
   template:
     metadata:
       annotations:
