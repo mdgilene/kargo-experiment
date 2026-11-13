@@ -20,13 +20,12 @@ spec:
             checkout:
               - branch: main
                 path: ./src
-        - uses: helm-update-image
+        - uses: yaml-update
           config:
             path: ./src/stages/staging/values.yaml
-            images:
-              - image: nginxinc/nginx-unprivileged
-                key: image.tag
-                value: Tag
+            updates:
+              - key: image.tag
+                value: ${{ imageFrom('nginxinc/nginx-unprivileged').Tag }}
         - uses: git-commit
           as: commit
           config:
