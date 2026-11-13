@@ -13,7 +13,12 @@ spec:
           - dev
   verification:
     analysisTemplates:
-      - name: wait-15s
+      - name: e2e
+    args:
+      - name: host
+        value: hello-world-staging.hello-world-staging.svc.cluster.local
+      - name: expectedMessage
+        value: "Hello World from staging!"
   promotionTemplate:
     spec:
       vars:

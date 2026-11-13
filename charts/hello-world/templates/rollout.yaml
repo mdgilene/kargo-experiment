@@ -37,6 +37,9 @@ spec:
     blueGreen:
       activeService: {{ include "hello-world.fullname" . }}
       previewService: {{ include "hello-world.fullname" . }}-preview
+      prePromotionAnalysis:
+        templates:
+          - templateName: {{ include "hello-world.fullname" . }}-smoke
       autoPromotionEnabled: {{ .Values.rollout.autoPromotionEnabled }}
       scaleDownDelaySeconds: {{ .Values.rollout.scaleDownDelaySeconds }}
   template:

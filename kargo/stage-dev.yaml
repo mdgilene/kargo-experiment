@@ -10,9 +10,6 @@ spec:
         name: hello-world
       sources:
         direct: true
-  verification:
-    analysisTemplates:
-      - name: wait-15s
   promotionTemplate:
     spec:
       vars:

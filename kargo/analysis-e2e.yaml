@@ -1,0 +1,46 @@
+# Mock end-to-end suite run as Kargo verification against a live stage.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: e2e
+  namespace: kargo-hello-world
+spec:
+  args:
+    - name: host
+    - name: expectedMessage
+  metrics:
+    - name: e2e
+      count: 1
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: e2e
+                    image: curlimages/curl:8.10.1
+                    command: ["sh", "-c"]
+                    args:
+                      - |
+                        set -eu
+                        base="http://{{args.host}}:8080"
+                        fail() { echo "FAIL: $1"; exit 1; }
+                        echo "== test 1: home page returns 200"
+                        code=$(curl -s -o /tmp/body -w '%{http_code}' --retry 5 --retry-delay 2 --retry-connrefused "$base/")
+                        [ "$code" = "200" ] || fail "got HTTP $code"
+                        echo "== test 2: page shows the stage message"
+                        grep -q "{{args.expectedMessage}}" /tmp/body || fail "message not found"
+                        echo "== test 3: page shows chart and image versions"
+                        grep -q "Chart: hello-world" /tmp/body || fail "chart version missing"
+                        grep -q "Image: nginxinc/nginx-unprivileged:1" /tmp/body || fail "image version missing"
+                        echo "== test 4: unknown path returns 404"
+                        code=$(curl -s -o /dev/null -w '%{http_code}' "$base/does-not-exist")
+                        [ "$code" = "404" ] || fail "expected 404, got $code"
+                        echo "== test 5: repeated requests are stable and fast"
+                        for i in 1 2 3 4 5 6 7 8 9 10; do
+                          out=$(curl -s -o /dev/null -w '%{http_code} %{time_total}' "$base/")
+                          [ "${out%% *}" = "200" ] || fail "request $i returned $out"
+                        done
+                        echo "ALL E2E TESTS PASSED"
