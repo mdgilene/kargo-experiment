@@ -1,0 +1,23 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kargo-quickstart
+nodes:
+- extraPortMappings:
+  - containerPort: 31080 # Argo CD dashboard
+    hostPort: 31080
+    listenAddress: "127.0.0.1"
+  - containerPort: 31081 # Kargo dashboard
+    hostPort: 31081
+    listenAddress: "127.0.0.1"
+  - containerPort: 31082 # Kargo external webhooks server
+    hostPort: 31082
+    listenAddress: "127.0.0.1"
+  - containerPort: 32080 # hello-world dev
+    hostPort: 32080
+    listenAddress: "127.0.0.1"
+  - containerPort: 32081 # hello-world staging
+    hostPort: 32081
+    listenAddress: "127.0.0.1"
+  - containerPort: 32082 # hello-world prod
+    hostPort: 32082
+    listenAddress: "127.0.0.1"

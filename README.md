@@ -25,3 +25,14 @@ together with semver git tags (`vX.Y.Z`); a tag is the unit Kargo promotes.
 
 `hello-world` is exposed on NodePorts 32080 (dev), 32081 (staging), 32082 (prod).
 `hello-api` is ClusterIP only; use `kubectl port-forward`.
+
+## Bootstrap from Scratch
+
+Requires `docker`, `kind`, `kubectl`, and `helm`:
+
+```bash
+# Create kind cluster + install cert-manager, Argo CD, Argo Rollouts, Kargo, and this repo
+GITHUB_USER=<user> GITHUB_TOKEN=<pat-with-repo-scope> make bootstrap
+```
+
+Run `make help` for individual targets (`cluster`, `kargo`, `argocd`, `project`, `apps`, `status`, `teardown`).
