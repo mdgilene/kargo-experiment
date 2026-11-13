@@ -9,9 +9,11 @@ spec:
         kind: Warehouse
         name: hello-world
       sources:
-        requiredSoakTime: 15s
         stages:
           - dev
+  verification:
+    analysisTemplates:
+      - name: wait-15s
   promotionTemplate:
     spec:
       vars:
