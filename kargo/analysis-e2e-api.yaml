@@ -9,7 +9,7 @@ spec:
     - name: apiHost
     - name: apiExpectedMessage
   metrics:
-    - name: e2e
+    - name: e2e-api
       count: 1
       provider:
         job:
