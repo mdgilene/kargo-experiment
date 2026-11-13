@@ -26,3 +26,4 @@ resources:
 rollout:
   autoPromotionEnabled: true
   scaleDownDelaySeconds: 30
+  analysisHistoryLimit: 3

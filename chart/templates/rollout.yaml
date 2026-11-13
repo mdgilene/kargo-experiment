@@ -30,6 +30,10 @@ metadata:
 spec:
   replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: 2
+  # Keep recent AnalysisRuns (and the Jobs/pods they own) around so results and logs can be inspected
+  analysis:
+    successfulRunHistoryLimit: {{ .Values.rollout.analysisHistoryLimit }}
+    unsuccessfulRunHistoryLimit: {{ .Values.rollout.analysisHistoryLimit }}
   selector:
     matchLabels:
       {{- include "hello-world.selectorLabels" . | nindent 6 }}
