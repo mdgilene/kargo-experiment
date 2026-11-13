@@ -9,5 +9,6 @@ spec:
     - image:
         repoURL: nginxinc/nginx-unprivileged
         imageSelectionStrategy: NewestBuild
-        allowTags: ^1\.27\.\d+-alpine$
+        allowTagsRegexes:
+          - ^1\.27\.\d+-alpine$
         discoveryLimit: 5
