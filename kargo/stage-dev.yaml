@@ -37,17 +37,11 @@ spec:
           config:
             inPath: ./src/stages/dev/values.yaml
             outPath: ./out/values-stage.yaml
-        - uses: yaml-update
-          config:
-            path: ./out/values-stage.yaml
-            updates:
-              - key: image.tag
-                value: ${{ imageFrom('nginxinc/nginx-unprivileged').Tag }}
         - uses: git-commit
           as: commit
           config:
             path: ./out
-            message: "kargo: dev <- repo ${{ commitFrom(vars.repo).Tag }}, image ${{ imageFrom('nginxinc/nginx-unprivileged').Tag }}"
+            message: "kargo: dev <- repo ${{ commitFrom(vars.repo).Tag }}"
         - uses: git-push
           config:
             path: ./out

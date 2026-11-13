@@ -1,5 +1,3 @@
 message: "Hello World from prod!"
-image:
-  tag: "placeholder" # overwritten by Kargo at promotion time
 service:
   nodePort: 32082
