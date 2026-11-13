@@ -36,4 +36,5 @@ spec:
         - uses: git-push
           config:
             path: ./src
+            tag: ${{ vars.releaseTag }}
 
