@@ -14,3 +14,4 @@ spec:
         allowTagsRegexes:
           - ^v\d+\.\d+\.\d+$
         discoveryLimit: 5
+
