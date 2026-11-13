@@ -1,0 +1,27 @@
+replicaCount: 1
+
+image:
+  repository: nginxinc/nginx-unprivileged
+  pullPolicy: IfNotPresent
+  tag: "1.27-alpine"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+message: "Hello API from Kargo + Argo CD!"
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+
+# Argo Rollouts blue/green: the preview Service targets the new ReplicaSet until it is promoted
+rollout:
+  autoPromotionEnabled: true
+  scaleDownDelaySeconds: 30
+  analysisHistoryLimit: 3

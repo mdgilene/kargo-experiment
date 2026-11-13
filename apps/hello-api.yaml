@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello-api-prod
+  namespace: argocd
+  annotations:
+    kargo.akuity.io/authorized-stage: kargo-hello-world:prod
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mdgilene/kargo-experiment.git
+    targetRevision: stage/prod
+    path: charts/hello-api
+    helm:
+      valueFiles:
+        - values.yaml
+        - ../../values/hello-api.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hello-api-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

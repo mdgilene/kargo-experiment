@@ -1,0 +1,39 @@
+{{- /*
+Smoke test run by Argo Rollouts as a pre-promotion analysis.
+It hits the preview Service (new ReplicaSet only) before traffic is switched.
+*/}}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "hello-api.fullname" . }}-smoke
+  labels:
+    {{- include "hello-api.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  metrics:
+    - name: smoke
+      count: 1
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke
+                    image: curlimages/curl:8.10.1
+                    command: ["sh", "-c"]
+                    args:
+                      - |
+                        set -eu
+                        url="http://{{ include "hello-api.fullname" . }}-preview:{{ .Values.service.port }}/"
+                        echo "Smoke testing $url"
+                        code=$(curl -s -o /tmp/body -w '%{http_code}' --retry 5 --retry-delay 2 --retry-connrefused "$url")
+                        echo "HTTP $code"
+                        [ "$code" = "200" ] || { echo "FAIL: expected HTTP 200"; exit 1; }
+                        grep -q "{{ .Values.message }}" /tmp/body || { echo "FAIL: message missing"; exit 1; }
+                        grep -q "Chart: {{ .Chart.Name }} {{ .Chart.Version }}" /tmp/body || { echo "FAIL: chart version missing"; exit 1; }
+                        grep -q "Image: {{ .Values.image.repository }}:{{ .Values.image.tag }}" /tmp/body || { echo "FAIL: image tag missing"; exit 1; }
+                        echo "PASS"
