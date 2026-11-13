@@ -51,7 +51,6 @@ spec:
         - uses: git-push
           config:
             path: ./out
-            generateTargetBranch: true
         - uses: argocd-update
           config:
             apps:
