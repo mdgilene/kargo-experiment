@@ -13,7 +13,11 @@ data:
       </head>
       <body>
         <h1>{{ .Values.message }}</h1>
-        <p>Image: {{ .Values.image.repository }}:{{ .Values.image.tag }}</p>
+        <ul>
+          <li>Chart: {{ .Chart.Name }} {{ .Chart.Version }}</li>
+          <li>App version: {{ .Chart.AppVersion }}</li>
+          <li>Image: {{ .Values.image.repository }}:{{ .Values.image.tag }}</li>
+        </ul>
       </body>
     </html>
 ---
@@ -31,7 +35,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ .Values.message | sha256sum }}
+        checksum/config: {{ printf "%s-%s-%s" .Values.message .Values.image.tag .Chart.Version | sha256sum }}
       labels:
         {{- include "hello-world.selectorLabels" . | nindent 8 }}
     spec:
