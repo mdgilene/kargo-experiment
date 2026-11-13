@@ -13,32 +13,51 @@ spec:
           - staging
   promotionTemplate:
     spec:
+      vars:
+        - name: repo
+          value: https://github.com/mdgilene/kargo-experiment.git
       steps:
+        # Tagged repo version from Freight -> ./src, stage branch -> ./out
         - uses: git-clone
           config:
-            repoURL: https://github.com/mdgilene/kargo-experiment.git
+            repoURL: ${{ vars.repo }}
             checkout:
-              - branch: main
+              - commit: ${{ commitFrom(vars.repo).ID }}
                 path: ./src
+              - branch: stage/prod
+                create: true
+                path: ./out
+        - uses: git-clear
+          config:
+            path: ./out
+        - uses: copy
+          config:
+            inPath: ./src/charts/hello-world
+            outPath: ./out/chart
+        - uses: copy
+          config:
+            inPath: ./src/stages/prod/values.yaml
+            outPath: ./out/values-stage.yaml
         - uses: yaml-update
           config:
-            path: ./src/stages/prod/values.yaml
+            path: ./out/values-stage.yaml
             updates:
               - key: image.tag
                 value: ${{ imageFrom('nginxinc/nginx-unprivileged').Tag }}
         - uses: git-commit
           as: commit
           config:
-            path: ./src
-            message: "kargo: promote ${{ imageFrom('nginxinc/nginx-unprivileged').Tag }} to prod"
+            path: ./out
+            message: "kargo: prod <- repo ${{ commitFrom(vars.repo).Tag }}, image ${{ imageFrom('nginxinc/nginx-unprivileged').Tag }}"
         - uses: git-push
           config:
-            path: ./src
+            path: ./out
+            generateTargetBranch: true
         - uses: argocd-update
           config:
             apps:
               - name: hello-world-prod
                 namespace: argocd
                 sources:
-                  - repoURL: https://github.com/mdgilene/kargo-experiment.git
+                  - repoURL: ${{ vars.repo }}
                     desiredRevision: ${{ outputs.commit.commit }}

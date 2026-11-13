@@ -6,9 +6,16 @@ metadata:
 spec:
   interval: 5m
   subscriptions:
+    # Container image
     - image:
         repoURL: nginxinc/nginx-unprivileged
         imageSelectionStrategy: NewestBuild
         allowTagsRegexes:
           - ^1\.27\.\d+-alpine$
+        discoveryLimit: 5
+    # This repository (chart + stage values), versioned with semver git tags (v0.1.0, ...)
+    - git:
+        repoURL: https://github.com/mdgilene/kargo-experiment.git
+        commitSelectionStrategy: SemVer
+        semverConstraint: ">=0.1.0"
         discoveryLimit: 5

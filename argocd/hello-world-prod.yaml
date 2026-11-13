@@ -9,12 +9,12 @@ spec:
   project: default
   source:
     repoURL: https://github.com/mdgilene/kargo-experiment.git
-    targetRevision: main
-    path: charts/hello-world
+    targetRevision: stage/prod
+    path: chart
     helm:
       valueFiles:
         - values.yaml
-        - ../../stages/prod/values.yaml
+        - ../values-stage.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: hello-world-prod
