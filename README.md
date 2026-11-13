@@ -3,6 +3,9 @@
 Kargo + Argo CD + Helm, using an **app-of-apps** layout. Everything in this repo is versioned
 together with semver git tags (`vX.Y.Z`); a tag is the unit Kargo promotes.
 
+![Kargo](./docs/images/kargo.png)
+![ArgoCD](./docs/images/argocd.png)
+
 ## Layout (on `main`)
 
 | Path | Purpose |

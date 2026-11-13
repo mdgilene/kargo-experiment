@@ -113,3 +113,4 @@ Once `hello-world-staging` and `hello-api-staging` are `Synced` and `Healthy`, K
 | **dev** | `Freight` from `Warehouse` | Pushes `stage/dev` branch; syncs `root-dev` + children | Rollout smoke test on `-preview` Services |
 | **staging** | Verified `Freight` from `dev` | Pushes `stage/staging` branch; syncs `root-staging` + children | Rollout smoke tests + Kargo `e2e` & `e2e-api` verification |
 | **prod** | Verified `Freight` from `staging` | Pushes `stage/prod` branch; syncs `root-prod` + children | Rollout smoke tests |
+
