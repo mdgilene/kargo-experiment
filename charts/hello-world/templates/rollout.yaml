@@ -34,9 +34,11 @@ spec:
     matchLabels:
       {{- include "hello-world.selectorLabels" . | nindent 6 }}
   strategy:
-    canary:
-      steps:
-        {{- toYaml .Values.rollout.steps | nindent 8 }}
+    blueGreen:
+      activeService: {{ include "hello-world.fullname" . }}
+      previewService: {{ include "hello-world.fullname" . }}-preview
+      autoPromotionEnabled: {{ .Values.rollout.autoPromotionEnabled }}
+      scaleDownDelaySeconds: {{ .Values.rollout.scaleDownDelaySeconds }}
   template:
     metadata:
       annotations:
