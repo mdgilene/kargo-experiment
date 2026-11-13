@@ -1,5 +1,5 @@
 message: "Hello World from dev!"
 image:
-  tag: 1.27.5-alpine
+  tag: "placeholder" # overwritten by Kargo at promotion time
 service:
   nodePort: 32080
